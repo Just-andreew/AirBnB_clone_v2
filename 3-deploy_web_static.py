@@ -1,26 +1,20 @@
 #!/usr/bin/python3
-"""Fabric script to distribute an archive to web servers.
+"""Create and distribute an archive to your web servers.
 
-----NEEDS TO REVISIT SCRIPT
+using deploy():
 """
 
 import os
 from datetime import datetime
-from fabric.api import env, local, put, run
+from fabric.api import env, local, put, run, runs_once
 
 
 env.hosts = ['54.160.86.108', '34.239.250.31']
 
 
-def do_deploy(archive_path):
-    """Distributes an archive to a web server.
-
-    Args:
-        archive_path (str): The path of the archive to distribute.
-    Returns:
-        If the file doesn't exist at archive_path or an error occurs - False.
-        Otherwise - True.
-    """
+@runs_once
+def do_pack():
+    """Archive the static files."""
     if not os.path.isdir("versions"):
         os.mkdir("versions")
     cur_time = datetime.now()
@@ -43,7 +37,7 @@ def do_deploy(archive_path):
 
 
 def do_deploy(archive_path):
-    """Deploys the static files to the host servers.
+    """Deploy the static files to the host servers.
 
     Args:
         archive_path (str): The path to the archived static files.
@@ -63,8 +57,14 @@ def do_deploy(archive_path):
         run("rm -rf {}web_static".format(folder_path))
         run("rm -rf /data/web_static/current")
         run("ln -s {} /data/web_static/current".format(folder_path))
-        print('New version deployed!')
+        print('New version is now LIVE!')
         success = True
     except Exception:
         success = False
     return success
+
+
+def deploy():
+    """Archive and deploy the static files to the host servers."""
+    archive_path = do_pack()
+    return do_deploy(archive_path) if archive_path else False
